@@ -19,20 +19,27 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
 
   // Try to refresh the token if it's expired
   if (isTokenExpired() && !isPublicRoute) {
+    console.log("Token expired, attempting to refresh...");
     const refreshed = await refreshAccessToken();
+    console.log("Token refresh result:", refreshed);
+    
     // If refresh failed, redirect to login
     if (!refreshed) {
+      console.log("Token refresh failed, redirecting to login");
       return navigateTo("/auth/login");
     }
   }
 
   // If not authenticated and trying to access a protected route
+  // This needs to check isAuthenticated.value AFTER potential refresh
   if (!isAuthenticated.value && !isPublicRoute) {
+    console.log("Not authenticated, redirecting to login");
     return navigateTo("/auth/login");
   }
 
   // If authenticated and trying to access login page
   if (isAuthenticated.value && to.path === "/auth/login") {
+    console.log("Already authenticated, redirecting to home");
     return navigateTo("/");
   }
 });

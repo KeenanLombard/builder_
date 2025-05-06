@@ -126,15 +126,22 @@
 
 <script setup>
 // Projects data
-const { getProjects } = useProjects();
-
-console.log(await getProjects());
+const { getProjects, createProject } = useProjects();
+import { ref, onMounted } from "vue";
 
 const showModal = ref(false);
 const toasts = ref([]);
 let nextToastId = 1;
 
 const projects = ref([]);
+
+onMounted(async () => {
+  let data = await getProjects();
+  if (data.success) {
+    projects.value = data.data;
+  }
+  console.log(data);
+});
 
 const openNewProjectModal = () => {
   showModal.value = true;
@@ -143,7 +150,7 @@ const openNewProjectModal = () => {
 function viewProject(project) {
   console.log("View:", project);
   const router = useRouter();
-  navigateTo(`/projects/1`);
+  navigateTo(`/projects/${project.id}`);
 }
 
 function editProject(project) {

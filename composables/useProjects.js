@@ -70,7 +70,7 @@ export function useProjects() {
 
       const query = queryParams.toString() ? `?${queryParams.toString()}` : "";
 
-      const response = await $fetch(`${baseUrl}/items/project_data${query}`, {
+      const response = await $fetch(`${baseUrl}/items/${COLLECTION}`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${accessToken.value}`,
@@ -82,7 +82,7 @@ export function useProjects() {
         projects.value = response.data;
         return {
           success: true,
-          data: response,
+          data: response.data,
         };
       }
 
@@ -119,22 +119,19 @@ export function useProjects() {
         query = `?fields=${fields.join(",")}`;
       }
 
-      const response = await $fetch(
-        `${baseUrl}/items/${COLLECTION}/${id}${query}`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${accessToken.value}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const response = await $fetch(`${baseUrl}/items/${COLLECTION}/${id}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${accessToken.value}`,
+          "Content-Type": "application/json",
+        },
+      });
 
       if (response && response.data) {
         currentProject.value = response.data;
         return {
           success: true,
-          data: response,
+          data: response.data,
         };
       }
 

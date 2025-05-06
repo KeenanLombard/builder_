@@ -4,4 +4,8 @@
   <div>User</div>
 </template>
 
-<script setup></script>
+<script setup>
+const { getUser } = useAuth();
+
+console.log(getUser());
+</script>

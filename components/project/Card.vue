@@ -96,9 +96,7 @@
     </div>
 
     <!-- Project thumbnail -->
-    <div
-      class="h-40 bg-cover bg-center"
-      :style="{ backgroundImage: `url(${project.thumbnail})` }">
+    <div class="h-40 bg-cover bg-center">
       <div
         class="w-full h-full bg-black bg-opacity-30 flex items-center justify-center">
         <span
@@ -119,24 +117,24 @@
 
       <div class="mt-4 flex items-center justify-between">
         <div class="flex items-center">
-          <div class="flex -space-x-2">
+          <!-- <div class="flex -space-x-2">
             <img
               v-for="member in project.team.slice(0, 3)"
               :key="member.id"
               class="h-6 w-6 rounded-full border border-white"
               :src="member.avatar"
               :alt="member.name" />
-          </div>
-          <span
+          </div> -->
+          <!-- <span
             v-if="project.team.length > 3"
             class="ml-1 text-xs text-gray-500">
             +{{ project.team.length - 3 }}
-          </span>
+          </span> -->
         </div>
-        <div class="text-xs text-gray-500">Due {{ project.dueDate }}</div>
+        <div class="text-xs text-gray-500">Due {{ project.date_created }}</div>
       </div>
 
-      <div class="mt-4 pt-3 border-t border-gray-100">
+      <!-- <div class="mt-4 pt-3 border-t border-gray-100">
         <div class="flex justify-between items-center">
           <div class="flex items-center space-x-2">
             <div class="text-xs text-gray-500">Progress</div>
@@ -151,7 +149,7 @@
             class="bg-indigo-600 h-1.5 rounded-full"
             :style="{ width: project.progress + '%' }"></div>
         </div>
-      </div>
+      </div> -->
 
       <div class="mt-4 flex justify-between card-actions">
         <button
@@ -196,6 +194,7 @@ function handleClickOutside(event) {
 
 onMounted(() => {
   document.addEventListener("click", handleClickOutside);
+  console.log(props.project);
 });
 
 onBeforeUnmount(() => {

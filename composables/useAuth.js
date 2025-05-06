@@ -2,6 +2,7 @@
 
 // composables/useAuth.ts
 import { useCookie, useRuntimeConfig } from "#app";
+import { computed, ref, watch } from 'vue';
 
 export function useAuth() {
   // Use cookies to store authentication data
@@ -12,6 +13,9 @@ export function useAuth() {
 
   const config = useRuntimeConfig();
   const baseUrl = config.public.BASE_URL;
+  
+  // Track token refresh attempts to prevent infinite loops
+  const isRefreshing = ref(false);
 
   /**
    * Login with email and password
@@ -117,9 +121,15 @@ export function useAuth() {
    * Refresh the access token using the refresh token
    */
   const refreshAccessToken = async () => {
+    // If already attempting to refresh, don't trigger multiple refreshes
+    if (isRefreshing.value) return false;
+    // If no refresh token exists, we can't refresh
     if (!refreshToken.value) return false;
-
+    
     try {
+      isRefreshing.value = true;
+      console.log("Attempting to refresh token with:", refreshToken.value);
+      
       const response = await $fetch(`${baseUrl}/auth/refresh`, {
         method: "POST",
         body: {
@@ -129,6 +139,7 @@ export function useAuth() {
       });
 
       if (response && response.data) {
+        console.log("Token refresh successful");
         // Update tokens
         accessToken.value = response.data.access_token;
         refreshToken.value = response.data.refresh_token;
@@ -140,10 +151,17 @@ export function useAuth() {
         return true;
       }
 
+      console.log("Token refresh failed - no valid response data");
       return false;
     } catch (error) {
       console.error("Token refresh error:", error);
+      // If refresh fails, clear tokens to force re-login
+      accessToken.value = null;
+      refreshToken.value = null;
+      expiresAt.value = null;
       return false;
+    } finally {
+      isRefreshing.value = false;
     }
   };
 
@@ -152,9 +170,11 @@ export function useAuth() {
    */
   const isTokenExpired = () => {
     if (!expiresAt.value) return true;
+    if (!accessToken.value) return true;
 
-    // Buffer of 10 seconds to prevent edge cases
-    return Date.now() > parseInt(expiresAt.value) - 10000;
+    // Buffer of 30 seconds to prevent edge cases
+    const buffer = 30000; // 30 seconds in milliseconds
+    return Date.now() > parseInt(expiresAt.value) - buffer;
   };
 
   /**
@@ -220,6 +240,41 @@ export function useAuth() {
       };
     }
   };
+
+  // Set up automatic token refresh before expiration
+  if (process.client) {
+    // Only run this in the browser
+    const setupTokenRefresh = () => {
+      if (!accessToken.value || !expiresAt.value) return;
+      
+      const currentTime = Date.now();
+      const expirationTime = parseInt(expiresAt.value);
+      
+      // If token is going to expire in the next 5 minutes
+      const refreshThreshold = 5 * 60 * 1000; // 5 minutes
+      const timeUntilRefresh = expirationTime - currentTime - refreshThreshold;
+      
+      if (timeUntilRefresh > 0) {
+        console.log(`Setting up token refresh in ${timeUntilRefresh/1000} seconds`);
+        setTimeout(() => {
+          console.log("Time to refresh token");
+          refreshAccessToken();
+        }, timeUntilRefresh);
+      } else if (currentTime < expirationTime) {
+        // Token is valid but will expire soon, refresh now
+        console.log("Token will expire soon, refreshing now");
+        refreshAccessToken();
+      }
+    };
+    
+    // Initial setup
+    setupTokenRefresh();
+    
+    // Watch for token changes to reset the timer
+    watch(accessToken, () => {
+      setupTokenRefresh();
+    });
+  }
 
   return {
     login,

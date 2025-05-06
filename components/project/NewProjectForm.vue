@@ -11,6 +11,7 @@
       <div class="mt-1">
         <input
           id="name"
+          v-model="name"
           type="name"
           autocomplete="name"
           required
@@ -25,6 +26,7 @@
       <div class="mt-1">
         <textarea
           id="discription"
+          v-model="description"
           type="discription"
           autocomplete="discription"
           required
@@ -34,6 +36,7 @@
     <!-- Submit button -->
     <div>
       <button
+        @click="createNewProject"
         type="submit"
         :disabled="isLoading"
         class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50">
@@ -61,4 +64,24 @@
   </div>
 </template>
 
-<script setup></script>
+<script setup>
+const { createProject } = useProjects();
+
+const name = ref();
+const description = ref();
+
+const createNewProject = async () => {
+  let projectData = {
+    name: name.value,
+    description: description.value,
+
+    //import templates and populate here
+    project_code: null,
+    //-----------------------------------
+    cover_image: null,
+  };
+  await createProject(projectData).then((res) => {
+    navigateTo(`/projects/${res.data.id}`);
+  });
+};
+</script>
